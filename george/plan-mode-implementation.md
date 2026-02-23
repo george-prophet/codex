@@ -83,14 +83,14 @@ flowchart TB
     collab --> memory --> history
 ```
 
-- **Base instructions** ([`gpt-5.2-codex_instructions_template.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md)): Model identity, formatting rules, editing constraints, `rg` preference, git safety, `update_plan` guidance, frontend guidelines. Set as the `instructions` field of the API request. Always present. See [Base Prompt Analysis](#base-prompt-analysis) below.
-- **Collaboration mode prompt**: Injected as a `<collaboration_mode>` developer message in the `input` array ([`codex.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/codex.rs#L2771-L2775), [`client.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/client.rs#L519)).
-- **The 3-phase workflow** (explore → intent chat → implementation chat) is **exclusive to Plan mode**. Default mode's prompt ([`default.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/default.md)) is 12 lines and says the opposite: prefer executing over asking.
-- An [`execute.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/execute.md) template exists on disk but is **not wired up** — `ModeKind::Execute` is `#[doc(hidden)]` and excluded from serialization, the TUI, and the API.
+- **Base instructions** ([`gpt-5.2-codex_instructions_template.md`](../codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md)): Model identity, formatting rules, editing constraints, `rg` preference, git safety, `update_plan` guidance, frontend guidelines. Set as the `instructions` field of the API request. Always present. See [Base Prompt Analysis](#base-prompt-analysis) below.
+- **Collaboration mode prompt**: Injected as a `<collaboration_mode>` developer message in the `input` array ([`codex.rs`](../codex-rs/core/src/codex.rs#L2771-L2775), [`client.rs`](../codex-rs/core/src/client.rs#L519)).
+- **The 3-phase workflow** (explore → intent chat → implementation chat) is **exclusive to Plan mode**. Default mode's prompt ([`default.md`](../codex-rs/core/templates/collaboration_mode/default.md)) is 12 lines and says the opposite: prefer executing over asking.
+- An [`execute.md`](../codex-rs/core/templates/collaboration_mode/execute.md) template exists on disk but is **not wired up** — `ModeKind::Execute` is `#[doc(hidden)]` and excluded from serialization, the TUI, and the API.
 
 ### Base Prompt Analysis
 
-The base instructions template ([`gpt-5.2-codex_instructions_template.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md)) is the system-level `instructions` field sent with every API request. It is **always present regardless of collaboration mode**. It is 81 lines and covers seven areas:
+The base instructions template ([`gpt-5.2-codex_instructions_template.md`](../codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md)) is the system-level `instructions` field sent with every API request. It is **always present regardless of collaboration mode**. It is 81 lines and covers seven areas:
 
 #### 1. Identity and personality (L1-L3)
 
@@ -101,7 +101,7 @@ and collaborate to achieve the user's goals.
 {{ personality }}
 ```
 
-The `{{ personality }}` placeholder is resolved at runtime by [`get_model_instructions()`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/openai_models.rs#L283-L298) in `openai_models.rs`. For `gpt-5.2-codex`, the possible substitutions are defined in [`model_info.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/models_manager/model_info.rs#L15-L20):
+The `{{ personality }}` placeholder is resolved at runtime by [`get_model_instructions()`](../codex-rs/protocol/src/openai_models.rs#L283-L298) in `openai_models.rs`. For `gpt-5.2-codex`, the possible substitutions are defined in [`model_info.rs`](../codex-rs/core/src/models_manager/model_info.rs#L15-L20):
 
 | Personality | Substitution |
 |-------------|-------------|
@@ -178,16 +178,16 @@ There are actually **two** base prompt files:
 
 | File | Used by | Size |
 |------|---------|------|
-| [`gpt-5.2-codex_instructions_template.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md) | `gpt-5.2-codex` (via `model_messages.instructions_template`) | 81 lines |
-| [`prompt.md`](https://github.com/openai/codex/blob/main/codex-rs/core/prompt.md) | All other models (via `base_instructions` fallback) | ~276 lines |
+| [`gpt-5.2-codex_instructions_template.md`](../codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md) | `gpt-5.2-codex` (via `model_messages.instructions_template`) | 81 lines |
+| [`prompt.md`](../codex-rs/core/prompt.md) | All other models (via `base_instructions` fallback) | ~276 lines |
 
-The template is selected in [`model_info.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/models_manager/model_info.rs#L90-L103): `gpt-5.2-codex` uses the template with personality substitution; other models fall back to `prompt.md` which is a longer, more detailed prompt without the personality placeholder. The `base_instructions` field on `ModelInfo` defaults to `prompt.md` for all models, but `gpt-5.2-codex` overrides it via the `instructions_template` mechanism.
+The template is selected in [`model_info.rs`](../codex-rs/core/src/models_manager/model_info.rs#L90-L103): `gpt-5.2-codex` uses the template with personality substitution; other models fall back to `prompt.md` which is a longer, more detailed prompt without the personality placeholder. The `base_instructions` field on `ModelInfo` defaults to `prompt.md` for all models, but `gpt-5.2-codex` overrides it via the `instructions_template` mechanism.
 
 ## Plan Mode in Detail
 
 ### The Plan Mode Prompt
 
-Full prompt: [`core/templates/collaboration_mode/plan.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/plan.md). Three phases:
+Full prompt: [`core/templates/collaboration_mode/plan.md`](../codex-rs/core/templates/collaboration_mode/plan.md). Three phases:
 
 ```mermaid
 flowchart LR
@@ -229,31 +229,31 @@ This contrasts with the `update_plan` tool which is a strictly flat list (see be
 | `shell` / `exec` | Available (read-only use) | Available | Prompt instructions |
 | `apply_patch` | Available (read-only use) | Available | Prompt instructions |
 | `file_search` / `read` | Available | Available | — |
-| `request_user_input` | **Allowed** | Error returned | [Runtime check](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs#L74-L77) |
-| `update_plan` | Error returned | **Allowed** | [Runtime check](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/plan.rs#L107-L111) |
+| `request_user_input` | **Allowed** | Error returned | [Runtime check](../codex-rs/core/src/tools/handlers/request_user_input.rs#L74-L77) |
+| `update_plan` | Error returned | **Allowed** | [Runtime check](../codex-rs/core/src/tools/handlers/plan.rs#L107-L111) |
 | MCP / custom tools | Available (read-only use) | Available | Prompt instructions |
 
 Shell and `apply_patch` remain in the tool set for both modes. Plan mode restricts their use to non-mutating operations via prompt instructions only — the model can still run `grep`, `cargo check`, etc. Only `request_user_input` and `update_plan` have hard runtime enforcement.
 
 ### Plan Mode Preset
 
-Defined in [`collaboration_mode_presets.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/models_manager/collaboration_mode_presets.rs#L16-L24):
+Defined in [`collaboration_mode_presets.rs`](../codex-rs/core/src/models_manager/collaboration_mode_presets.rs#L16-L24):
 
 - **Model**: Inherits whatever model is currently configured
 - **Reasoning effort**: Defaults to `Medium` (overridable via `plan_mode_reasoning_effort` in config)
-- **Developer instructions**: Full content of [`plan.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/plan.md)
+- **Developer instructions**: Full content of [`plan.md`](../codex-rs/core/templates/collaboration_mode/plan.md)
 
 ### TUI Interactions
 
 | Entry point | Description |
 |-------------|-------------|
-| [`/plan`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/slash_command.rs#L88) | Type `/plan` in the input box |
+| [`/plan`](../codex-rs/tui/src/slash_command.rs#L88) | Type `/plan` in the input box |
 | Shift+Tab | Cycles between Default and Plan modes |
 | Config `mode: plan` | Sets Plan as the initial mode in `config.toml` |
 
-When active, the footer shows **"Plan mode"** in magenta ([`footer.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/bottom_pane/footer.rs#L95-L110)).
+When active, the footer shows **"Plan mode"** in magenta ([`footer.rs`](../codex-rs/tui/src/bottom_pane/footer.rs#L95-L110)).
 
-After a turn produces a `<proposed_plan>` block, the TUI shows ([`chatwidget.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/chatwidget.rs#L1422-L1447)):
+After a turn produces a `<proposed_plan>` block, the TUI shows ([`chatwidget.rs`](../codex-rs/tui/src/chatwidget.rs#L1422-L1447)):
 
 ```
 ┌─ Implement this plan? ──────────────────────────┐
@@ -293,9 +293,9 @@ flowchart TB
     strip --> plan_item
 ```
 
-**Conversation history** ([`ContextManager`](https://github.com/openai/codex/blob/main/codex-rs/core/src/context_manager/history.rs#L105-L110)): Raw assistant messages including `<proposed_plan>` tags are stored as-is and sent back to the model verbatim on the next turn.
+**Conversation history** ([`ContextManager`](../codex-rs/core/src/context_manager/history.rs#L105-L110)): Raw assistant messages including `<proposed_plan>` tags are stored as-is and sent back to the model verbatim on the next turn.
 
-**TUI display** ([`stream_events_utils.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/stream_events_utils.rs#L172-L182)): [`strip_proposed_plan_blocks()`](https://github.com/openai/codex/blob/main/codex-rs/core/src/proposed_plan_parser.rs#L71-L80) removes plan content from the chat display, emitting a separate `TurnItem::Plan` for dedicated rendering. This is purely cosmetic.
+**TUI display** ([`stream_events_utils.rs`](../codex-rs/core/src/stream_events_utils.rs#L172-L182)): [`strip_proposed_plan_blocks()`](../codex-rs/core/src/proposed_plan_parser.rs#L71-L80) removes plan content from the chat display, emitting a separate `TurnItem::Plan` for dedicated rendering. This is purely cosmetic.
 
 ### Iterating on a plan
 
@@ -327,7 +327,7 @@ The model in Default mode reads its own earlier `<proposed_plan>` output from co
 
 ### How it works
 
-The handler ([`plan.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/plan.rs#L101-L117)) is explicit about its nature:
+The handler ([`plan.rs`](../codex-rs/core/src/tools/handlers/plan.rs#L101-L117)) is explicit about its nature:
 
 > *"This function doesn't do anything useful. However, it gives the model a structured way to record its plan that clients can read and render. So it's the inputs to this function that are useful to clients, not the outputs."*
 
@@ -340,7 +340,7 @@ The handler simply:
 
 ### Schema
 
-The tool accepts a flat JSON object ([`plan.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/plan.rs#L22-L62), [`plan_tool.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/plan_tool.rs)):
+The tool accepts a flat JSON object ([`plan.rs`](../codex-rs/core/src/tools/handlers/plan.rs#L22-L62), [`plan_tool.rs`](../codex-rs/protocol/src/plan_tool.rs)):
 
 ```json
 {
@@ -372,7 +372,7 @@ Steps are identified **purely by their text content**. There is no incremental "
 
 ### TUI rendering
 
-The TUI renders `update_plan` calls as a checkbox list ([`history_cell.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/history_cell.rs#L2063-L2115)):
+The TUI renders `update_plan` calls as a checkbox list ([`history_cell.rs`](../codex-rs/tui/src/history_cell.rs#L2063-L2115)):
 
 ```
 • Updated Plan
@@ -389,7 +389,7 @@ The `update_plan` tool is intentionally flat. Complex plans are handled by:
 - **`update_plan`** tracking only coarse-grained milestones during execution
 - The model using descriptive step text (e.g. `"Auth: add Redis client dependency"`) to convey grouping
 
-The [base instructions template](https://github.com/openai/codex/blob/main/codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md#L57-L62) reinforces this: *"Skip using the planning tool for straightforward tasks... Do not make single-step plans... update it after having performed one of the sub-tasks."*
+The [base instructions template](../codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md#L57-L62) reinforces this: *"Skip using the planning tool for straightforward tasks... Do not make single-step plans... update it after having performed one of the sub-tasks."*
 
 ## Streaming: `<proposed_plan>` Parsing
 
@@ -408,7 +408,7 @@ flowchart TB
     parser --> plan --> item
 ```
 
-Managed by [`PlanModeStreamState`](https://github.com/openai/codex/blob/main/codex-rs/core/src/codex.rs#L5373-L5396) in `codex.rs`. Key behaviors:
+Managed by [`PlanModeStreamState`](../codex-rs/core/src/codex.rs#L5373-L5396) in `codex.rs`. Key behaviors:
 
 - Plan text is stripped from the agent message so it doesn't appear as regular chat
 - Plan content is emitted as separate `PlanDelta` events for dedicated UI rendering
@@ -418,7 +418,7 @@ Managed by [`PlanModeStreamState`](https://github.com/openai/codex/blob/main/cod
 
 ### `ModeKind`
 
-Defined in [`config_types.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/config_types.rs#L174-L214):
+Defined in [`config_types.rs`](../codex-rs/protocol/src/config_types.rs#L174-L214):
 
 ```rust
 pub enum ModeKind {
@@ -434,51 +434,51 @@ Only `Plan` and `Default` are user-visible. `ModeKind` gates `request_user_input
 
 ### `CollaborationMode` and `CollaborationModeMask`
 
-[`CollaborationMode`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/config_types.rs#L220-L223) wraps a `ModeKind` with settings (model, reasoning effort, developer instructions). [`CollaborationModeMask`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/config_types.rs#L298-L304) is a partial overlay for switching modes — only `Some` fields are applied.
+[`CollaborationMode`](../codex-rs/protocol/src/config_types.rs#L220-L223) wraps a `ModeKind` with settings (model, reasoning effort, developer instructions). [`CollaborationModeMask`](../codex-rs/protocol/src/config_types.rs#L298-L304) is a partial overlay for switching modes — only `Some` fields are applied.
 
 ## Configuration
 
-Plan mode can be configured in `config.toml` ([`config/mod.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/config/mod.rs#L380-L386)):
+Plan mode can be configured in `config.toml` ([`config/mod.rs`](../codex-rs/core/src/config/mod.rs#L380-L386)):
 
 | Key | Type | Description |
 |-----|------|-------------|
 | `mode` | `"plan"` or `"default"` | Initial collaboration mode |
 | `plan_mode_reasoning_effort` | `"low"`, `"medium"`, `"high"`, or `"none"` | Override the default `Medium` reasoning effort |
 
-Gated behind the [`CollaborationModes`](https://github.com/openai/codex/blob/main/codex-rs/core/src/features.rs#L137) feature flag. When disabled: `/plan` shows an error, `request_user_input` is not registered, Shift+Tab cycling is unavailable.
+Gated behind the [`CollaborationModes`](../codex-rs/core/src/features.rs#L137) feature flag. When disabled: `/plan` shows an error, `request_user_input` is not registered, Shift+Tab cycling is unavailable.
 
 ## Key Source Files
 
 | Area | Path |
 |------|------|
 | **Prompts** | |
-| Plan mode prompt | [`core/templates/collaboration_mode/plan.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/plan.md) |
-| Default mode prompt | [`core/templates/collaboration_mode/default.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/default.md) |
-| Execute mode prompt (unused) | [`core/templates/collaboration_mode/execute.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/collaboration_mode/execute.md) |
-| Base instructions template | [`core/templates/model_instructions/gpt-5.2-codex_instructions_template.md`](https://github.com/openai/codex/blob/main/codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md) |
+| Plan mode prompt | [`core/templates/collaboration_mode/plan.md`](../codex-rs/core/templates/collaboration_mode/plan.md) |
+| Default mode prompt | [`core/templates/collaboration_mode/default.md`](../codex-rs/core/templates/collaboration_mode/default.md) |
+| Execute mode prompt (unused) | [`core/templates/collaboration_mode/execute.md`](../codex-rs/core/templates/collaboration_mode/execute.md) |
+| Base instructions template | [`core/templates/model_instructions/gpt-5.2-codex_instructions_template.md`](../codex-rs/core/templates/model_instructions/gpt-5.2-codex_instructions_template.md) |
 | **Core** | |
-| Type definitions | [`protocol/src/config_types.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/config_types.rs#L174-L304) |
-| Plan preset | [`core/src/models_manager/collaboration_mode_presets.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/models_manager/collaboration_mode_presets.rs) |
-| Prompt injection | [`protocol/src/models.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/models.rs#L336-L346) |
-| Context updates on mode switch | [`core/src/context_manager/updates.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/context_manager/updates.rs#L51-L62) |
-| Model info / template loading | [`core/src/models_manager/model_info.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/models_manager/model_info.rs) |
-| API request construction | [`core/src/client.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/client.rs#L519) |
+| Type definitions | [`protocol/src/config_types.rs`](../codex-rs/protocol/src/config_types.rs#L174-L304) |
+| Plan preset | [`core/src/models_manager/collaboration_mode_presets.rs`](../codex-rs/core/src/models_manager/collaboration_mode_presets.rs) |
+| Prompt injection | [`protocol/src/models.rs`](../codex-rs/protocol/src/models.rs#L336-L346) |
+| Context updates on mode switch | [`core/src/context_manager/updates.rs`](../codex-rs/core/src/context_manager/updates.rs#L51-L62) |
+| Model info / template loading | [`core/src/models_manager/model_info.rs`](../codex-rs/core/src/models_manager/model_info.rs) |
+| API request construction | [`core/src/client.rs`](../codex-rs/core/src/client.rs#L519) |
 | **Tools** | |
-| `request_user_input` handler | [`core/src/tools/handlers/request_user_input.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/request_user_input.rs#L74-L77) |
-| `update_plan` handler + schema | [`core/src/tools/handlers/plan.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/plan.rs) |
-| `update_plan` types | [`protocol/src/plan_tool.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/plan_tool.rs) |
-| Tool registration | [`core/src/tools/spec.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/spec.rs) |
+| `request_user_input` handler | [`core/src/tools/handlers/request_user_input.rs`](../codex-rs/core/src/tools/handlers/request_user_input.rs#L74-L77) |
+| `update_plan` handler + schema | [`core/src/tools/handlers/plan.rs`](../codex-rs/core/src/tools/handlers/plan.rs) |
+| `update_plan` types | [`protocol/src/plan_tool.rs`](../codex-rs/protocol/src/plan_tool.rs) |
+| Tool registration | [`core/src/tools/spec.rs`](../codex-rs/core/src/tools/spec.rs) |
 | **Streaming / Parsing** | |
-| Plan parser | [`core/src/proposed_plan_parser.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/proposed_plan_parser.rs) |
-| Plan stripping (display) | [`core/src/stream_events_utils.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/stream_events_utils.rs#L172-L182) |
-| Stream state | [`core/src/codex.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/codex.rs#L5373-L5396) |
-| Conversation history | [`core/src/context_manager/history.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/context_manager/history.rs#L105-L110) |
+| Plan parser | [`core/src/proposed_plan_parser.rs`](../codex-rs/core/src/proposed_plan_parser.rs) |
+| Plan stripping (display) | [`core/src/stream_events_utils.rs`](../codex-rs/core/src/stream_events_utils.rs#L172-L182) |
+| Stream state | [`core/src/codex.rs`](../codex-rs/core/src/codex.rs#L5373-L5396) |
+| Conversation history | [`core/src/context_manager/history.rs`](../codex-rs/core/src/context_manager/history.rs#L105-L110) |
 | **TUI** | |
-| Slash command | [`tui/src/slash_command.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/slash_command.rs#L88) |
-| Mode switching + implement popup | [`tui/src/chatwidget.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/chatwidget.rs#L1422-L1447) |
-| Footer indicator | [`tui/src/bottom_pane/footer.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/bottom_pane/footer.rs#L95-L110) |
-| Collaboration modes | [`tui/src/collaboration_modes.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/collaboration_modes.rs) |
-| Plan update rendering | [`tui/src/history_cell.rs`](https://github.com/openai/codex/blob/main/codex-rs/tui/src/history_cell.rs#L2063-L2115) |
+| Slash command | [`tui/src/slash_command.rs`](../codex-rs/tui/src/slash_command.rs#L88) |
+| Mode switching + implement popup | [`tui/src/chatwidget.rs`](../codex-rs/tui/src/chatwidget.rs#L1422-L1447) |
+| Footer indicator | [`tui/src/bottom_pane/footer.rs`](../codex-rs/tui/src/bottom_pane/footer.rs#L95-L110) |
+| Collaboration modes | [`tui/src/collaboration_modes.rs`](../codex-rs/tui/src/collaboration_modes.rs) |
+| Plan update rendering | [`tui/src/history_cell.rs`](../codex-rs/tui/src/history_cell.rs#L2063-L2115) |
 | **Config** | |
-| Config definitions | [`core/src/config/mod.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/config/mod.rs#L380-L386) |
-| Feature flag | [`core/src/features.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/features.rs#L137) |
+| Config definitions | [`core/src/config/mod.rs`](../codex-rs/core/src/config/mod.rs#L380-L386) |
+| Feature flag | [`core/src/features.rs`](../codex-rs/core/src/features.rs#L137) |
